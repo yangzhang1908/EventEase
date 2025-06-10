@@ -1,0 +1,111 @@
+﻿@page "/events/register/{eventName}"
+@using System.ComponentModel.DataAnnotations
+@using EventEase.Services
+@inject NavigationManager NavigationManager
+@inject StateContainer StateContainer
+
+@code {
+    [Parameter]
+    public string eventName { get; set; } = string.Empty;
+
+    private bool IsValid => !string.IsNullOrWhiteSpace(eventName);
+
+    private RegistrationModel registration = new();
+    private bool registrationSubmitted = false;
+
+    private async Task HandleValidSubmit()
+    {
+        // In a real app, you would save to a database here
+        registrationSubmitted = true;
+        // Add to attendance tracking (implemented below)
+        AttendanceService.AddAttendee(eventName, registration.Email);
+
+        // Update state container with user information
+        StateContainer.CreateSession(registration.Email);
+
+        // Simulate server call
+        await Task.Delay(500);
+    }
+
+    private void BackToEvents()
+    {
+        NavigationManager.NavigateTo("/events");
+    }
+
+    // Model class for form data
+    public class RegistrationModel
+    {
+        [Required(ErrorMessage = "Please enter your name")]
+        [StringLength(100, ErrorMessage = "Name is too long")]
+        public string Name { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Please enter a valid email address")]
+        public string Email { get; set; } = string.Empty;
+
+        [Phone(ErrorMessage = "Please enter a valid phone number")]
+        public string? Phone { get; set; }
+
+        [Range(1, 10, ErrorMessage = "You can register between 1 and 10 attendees")]
+        public int Attendees { get; set; } = 1;
+    }
+}
+
+@if (!IsValid)
+{
+    <div class="alert alert-danger">Invalid event for registration.</div>
+    <button class="btn btn-secondary mt-2" @onclick="BackToEvents">Back to Events</button>
+    return;
+}
+
+<div class="card">
+    <div class="card-header">
+        <h3>Register for: @eventName</h3>
+    </div>
+    <div class="card-body">
+        @if (registrationSubmitted)
+        {
+            <div class="alert alert-success">
+                <h4>Thank you for registering!</h4>
+                <p>We've sent a confirmation email to @registration.Email.</p>
+                <button class="btn btn-primary mt-3" @onclick="BackToEvents">Back to Events</button>
+            </div>
+        }
+        else
+        {
+            <EditForm Model="@registration" OnValidSubmit="@HandleValidSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <label for="name" class="form-label">Full Name</label>
+                    <InputText id="name" @bind-Value="registration.Name" class="form-control" />
+                    <ValidationMessage For="@(() => registration.Name)" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <InputText id="email" @bind-Value="registration.Email" class="form-control" />
+                    <ValidationMessage For="@(() => registration.Email)" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="phone" class="form-label">Phone (optional)</label>
+                    <InputText id="phone" @bind-Value="registration.Phone" class="form-control" />
+                    <ValidationMessage For="@(() => registration.Phone)" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="attendees" class="form-label">Number of Attendees</label>
+                    <InputNumber id="attendees" @bind-Value="registration.Attendees" class="form-control" />
+                    <ValidationMessage For="@(() => registration.Attendees)" />
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <button type="submit" class="btn btn-primary">Register</button>
+                    <button type="button" class="btn btn-secondary" @onclick="BackToEvents">Cancel</button>
+                </div>
+            </EditForm>
+        }
+    </div>
+</div>

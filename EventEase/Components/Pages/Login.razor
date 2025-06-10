@@ -1,0 +1,74 @@
+﻿@* Components/Pages/Login.razor *@
+
+@page "/login"
+@using EventEase.Services
+@using System.ComponentModel.DataAnnotations
+@inject StateContainer StateContainer
+@inject NavigationManager NavigationManager
+
+<h3>Login</h3>
+
+<div class="card">
+    <div class="card-body">
+        @if (loginSuccessful)
+        {
+            <div class="alert alert-success">
+                <h4>Login Successful!</h4>
+                <p>Redirecting to your profile...</p>
+            </div>
+        }
+        else
+        {
+            <EditForm Model="loginModel" OnValidSubmit="HandleLogin">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <InputText id="email" @bind-Value="loginModel.Email" class="form-control" />
+                    <ValidationMessage For="@(() => loginModel.Email)" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <InputText id="password" type="password" @bind-Value="loginModel.Password" class="form-control" />
+                    <ValidationMessage For="@(() => loginModel.Password)" />
+                </div>
+
+                <button type="submit" class="btn btn-primary">Login</button>
+            </EditForm>
+        }
+    </div>
+</div>
+
+@code {
+    private LoginModel loginModel = new();
+    private bool loginSuccessful = false;
+
+    private async Task HandleLogin()
+    {
+        // In a real app, you would validate against a database
+        // For this example, any non-empty email is accepted
+        if (!string.IsNullOrWhiteSpace(loginModel.Email))
+        {
+            loginSuccessful = true;
+            StateContainer.CreateSession(loginModel.Email);
+
+            // Delay to show success message
+            await Task.Delay(1000);
+
+            NavigationManager.NavigateTo("/user/profile");
+        }
+    }
+
+    public class LoginModel
+    {
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Please enter a valid email address")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Password is required")]
+        public string Password { get; set; } = string.Empty;
+    }
+}
+

@@ -1,0 +1,33 @@
+﻿<h3>EventCard</h3>
+
+@code {
+    [Parameter]
+    public string EventName { get; set; } = string.Empty;
+
+    [Parameter]
+    public DateTime EventDate { get; set; }
+
+    [Parameter]
+    public string Location { get; set; } = string.Empty;
+
+    private bool IsValid =>
+            !string.IsNullOrWhiteSpace(EventName)
+            && EventDate != DateTime.MinValue
+            && !string.IsNullOrWhiteSpace(Location);
+}
+
+@if (IsValid)
+{
+    <div class="card m-2 p-3">
+        <h4>@EventName</h4>
+        <p><strong>Date:</strong> @EventDate.ToString("MMMM dd, yyyy")</p>
+        <p><strong>Location:</strong> @Location</p>
+        <NavLink class="btn btn-primary" href="@($"/events/details/{EventName}")">View Details</NavLink>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning m-2">
+        Invalid event data.
+    </div>
+}

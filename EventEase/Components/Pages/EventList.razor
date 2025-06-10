@@ -1,0 +1,23 @@
+﻿@page "/events"
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using EventEase.Models
+
+@code {
+    private List<Event> events = new()
+    {
+        new Event { Name = "Tech Conference", Date = DateTime.Today.AddDays(10), Location = "New York" },
+        new Event { Name = "Marketing Summit", Date = DateTime.Today.AddDays(20), Location = "Chicago" },
+        new Event { Name = "Startup Pitch", Date = DateTime.Today.AddDays(30), Location = "San Francisco" }
+    };
+
+}
+
+<h3>Upcoming Events</h3>
+
+<!--Virtualize Items="events" Context="evt">
+    <EventCard @key="evt.Name" EventName="@evt.Name" EventDate="@evt.Date" Location="@evt.Location" />
+</Virtualize-->
+@foreach (var evt in events)
+{
+    <EventCard @key="evt.Name" EventName="@evt.Name" EventDate="@evt.Date" Location="@evt.Location" />
+}

@@ -1,0 +1,72 @@
+﻿@page "/events/details/{eventName}"
+@using EventEase.Services
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject StateContainer StateContainer
+@using EventEase.Models
+
+@code {
+    [Parameter]
+    public string eventName { get; set; } = string.Empty;
+
+    private bool IsValid => !string.IsNullOrWhiteSpace(eventName);
+
+    private int AttendanceCount => AttendanceService.GetAttendanceCount(eventName);
+    private bool IsUserRegistered =>
+                        StateContainer.IsLoggedIn &&
+                        AttendanceService.GetEventAttendees(eventName).Contains(StateContainer.CurrentEmail);
+
+    private async Task NavigateToRegistration()
+    {
+        // Debug statement
+        await JSRuntime.InvokeVoidAsync("console.log", "Navigation method called");
+
+        // NavigationManager.NavigateTo($"/events/register/{eventName}");
+        try
+        {
+            NavigationManager.NavigateTo($"/events/register/{eventName}");
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("console.log", "Navigation error: " + ex.Message);
+        }
+    }
+}
+
+@if (IsValid)
+{
+    <div class="card">
+        <div class="card-header">
+            <h3>Event Details: @eventName</h3>
+        </div>
+        <div class="card-body">
+            <p><strong>Current Registered Attendees:</strong> @AttendanceCount</p>
+
+            @if (IsUserRegistered)
+            {
+                <div class="alert alert-success">
+                    You're registered for this event!
+                </div>
+            }
+            else if (StateContainer.IsLoggedIn)
+            {
+                <button class="btn btn-success" @onclick="NavigateToRegistration">Register</button>
+            }
+            else
+            {
+                <div>
+                    <button class="btn btn-success" @onclick="NavigateToRegistration">Register</button>
+                    <p class="text-muted mt-2">You'll be asked to provide contact information during registration.</p>
+                    <!-- Alternative link for testing -->
+                    <div class="mt-2">
+                        <NavLink class="btn btn-outline-success" href="@($"/events/register/{eventName}")">Register (Alternative)</NavLink>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-danger">Event not found.</div>
+}

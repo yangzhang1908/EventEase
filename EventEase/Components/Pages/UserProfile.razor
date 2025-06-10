@@ -1,0 +1,81 @@
+﻿@* Components/Pages/UserProfile.razor *@
+
+@page "/user/profile"
+@using EventEase.Services
+@inject StateContainer StateContainer
+@inject NavigationManager NavigationManager
+
+<h3>User Profile</h3>
+
+@if (StateContainer.IsLoggedIn)
+{
+    <div class="card">
+        <div class="card-header">
+            <h4>Profile Information</h4>
+        </div>
+        <div class="card-body">
+            <p><strong>Email:</strong> @StateContainer.CurrentEmail</p>
+
+            <h5 class="mt-4">Your Events</h5>
+            @if (userEvents.Any())
+            {
+                <ul class="list-group">
+                    @foreach (var eventName in userEvents)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            @eventName
+                            <NavLink class="btn btn-sm btn-outline-primary" href="@($"/events/details/{eventName}")">
+                                View Details
+                            </NavLink>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p>You haven't registered for any events yet.</p>
+            }
+
+            <button class="btn btn-danger mt-3" @onclick="LogOut">Log Out</button>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-info">
+        <p>You are not logged in.</p>
+        <button class="btn btn-primary" @onclick="NavigateToEvents">Browse Events</button>
+    </div>
+}
+
+@code {
+    private IEnumerable<string> userEvents = Array.Empty<string>();
+
+    protected override void OnInitialized()
+    {
+        if (StateContainer.IsLoggedIn)
+        {
+            userEvents = AttendanceService.GetUserEvents(StateContainer.CurrentEmail);
+        }
+
+        // Subscribe to state changes
+        StateContainer.OnChange += StateHasChanged;
+    }
+
+    private void LogOut()
+    {
+        StateContainer.EndSession();
+    }
+
+    private void NavigateToEvents()
+    {
+        NavigationManager.NavigateTo("/events");
+    }
+
+    public void Dispose()
+    {
+        // Unsubscribe from state changes
+        StateContainer.OnChange -= StateHasChanged;
+    }
+}
+
